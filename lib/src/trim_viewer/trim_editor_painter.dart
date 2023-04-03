@@ -147,7 +147,6 @@ class TrimEditorPainter extends CustomPainter {
       }
     }
 
-    // canvas.drawRRect(roundedRect, borderPaint);
     // // Paint start holder
     canvas.drawLine(
       Offset(startPos.dx, 0),
@@ -168,7 +167,7 @@ class TrimEditorPainter extends CustomPainter {
 
     canvas.drawCircle(
         endPos + Offset(0, -endPos.dy / 2), circleSize, circlePaint);
-    backArrowPainter = paintArrowIcon(Icons.arrow_forward_ios_rounded);
+    backArrowPainter ??= paintArrowIcon(Icons.arrow_forward_ios_rounded);
     backArrowPainter?.paint(
         canvas,
         endPos +

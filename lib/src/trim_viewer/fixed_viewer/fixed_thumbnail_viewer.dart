@@ -1,11 +1,11 @@
+import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:video_compress/video_compress.dart';
 
-class FixedThumbnailViewer extends StatelessWidget {
+class FixedThumbnailViewer extends StatefulWidget {
   final File videoFile;
   final int videoDuration;
   final double thumbnailHeight;
@@ -27,67 +27,85 @@ class FixedThumbnailViewer extends StatelessWidget {
     this.quality = 75,
   }) : super(key: key);
 
-  Stream<List<Uint8List?>> generateThumbnail() async* {
-    final String videoPath = videoFile.path;
-    double eachPart = videoDuration / numberOfThumbnails;
-    List<Uint8List?> byteList = [];
+  @override
+  State<FixedThumbnailViewer> createState() =>
+      _FixedThumbnailViewerState();
+}
+
+class _FixedThumbnailViewerState
+    extends State<FixedThumbnailViewer> {
+  StreamController<List<String>> controller = StreamController<List<String>>();
+
+  @override
+  void initState() {
+    super.initState();
+    generateThumbnail();
+  }
+
+  void generateThumbnail() async {
+    final String videoPath = widget.videoFile.path;
+    double eachPart = widget.videoDuration / widget.numberOfThumbnails;
+    List<String> byteList = [];
     // the cache of last thumbnail
-    Uint8List? lastBytes;
-    for (int i = 1; i <= numberOfThumbnails; i++) {
-      Uint8List? bytes;
+    String? recentThumbnailPath;
+    for (int i = 1; i <= widget.numberOfThumbnails; i++) {
+      if (!mounted) break;
+      String? thumbnailPath;
       try {
-        bytes = await VideoThumbnail.thumbnailData(
-          video: videoPath,
-          imageFormat: ImageFormat.JPEG,
-          timeMs: (eachPart * i).toInt(),
-          quality: quality,
-        );
+        final thumbnailFile = await VideoCompress.getFileThumbnail(videoPath,
+            quality: 20, position: (eachPart * i).toInt());
+        thumbnailPath = thumbnailFile.path;
       } catch (e) {
         debugPrint('ERROR: Couldn\'t generate thumbnails: $e');
       }
+
       // if current thumbnail is null use the last thumbnail
-      if (bytes != null) {
-        lastBytes = bytes;
+      if (thumbnailPath != null) {
+        recentThumbnailPath = thumbnailPath;
       } else {
-        bytes = lastBytes;
+        thumbnailPath = recentThumbnailPath;
       }
-      byteList.add(bytes);
-      if (byteList.length == numberOfThumbnails) {
-        onThumbnailLoadingComplete();
+      if (thumbnailPath != null) {
+        byteList.add(thumbnailPath);
+        controller.sink.add(byteList);
       }
-      yield byteList;
+
+      if (byteList.length == widget.numberOfThumbnails) {
+        widget.onThumbnailLoadingComplete();
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<Uint8List?>>(
-      stream: generateThumbnail(),
+    return StreamBuilder<List<String>>(
+      stream: controller.stream,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          List<Uint8List?> imageBytes = snapshot.data!;
+          List<String> imageBytes = snapshot.data!;
           return Row(
             mainAxisSize: MainAxisSize.max,
             children: List.generate(
-              numberOfThumbnails,
+              widget.numberOfThumbnails,
               (index) => SizedBox(
-                height: thumbnailHeight,
-                width: thumbnailHeight,
+                height: widget.thumbnailHeight,
+                width: widget.thumbnailHeight,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Opacity(
-                      opacity: 0.2,
-                      child: Image.memory(
-                        imageBytes[0] ?? kTransparentImage,
-                        fit: fit,
+                    if (imageBytes.isNotEmpty)
+                      Opacity(
+                        opacity: 0.2,
+                        child: Image.file(
+                          File(imageBytes.elementAt(0)),
+                          fit: widget.fit,
+                        ),
                       ),
-                    ),
                     index < imageBytes.length
                         ? FadeInImage(
+                            image: FileImage(File(imageBytes[index])),
+                            fit: widget.fit,
                             placeholder: MemoryImage(kTransparentImage),
-                            image: MemoryImage(imageBytes[index]!),
-                            fit: fit,
                           )
                         : const SizedBox(),
                   ],
@@ -98,7 +116,7 @@ class FixedThumbnailViewer extends StatelessWidget {
         } else {
           return Container(
             color: Colors.grey[900],
-            height: thumbnailHeight,
+            height: widget.thumbnailHeight,
             width: double.maxFinite,
           );
         }

@@ -12,7 +12,7 @@ dependencies:
 
   video_player: ^2.5.1
   ffmpeg_kit_flutter: 5.1.0-LTS
-  video_thumbnail: ^0.5.3
+  video_compress: ^3.1.2
   path_provider: ^2.0.12
   intl: ^0.18.0
   path: ^1.8.3
