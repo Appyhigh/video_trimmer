@@ -12,7 +12,6 @@ import '../../utils/editor_drag_type.dart';
 import '../trim_area_properties.dart';
 import '../trim_editor_properties.dart';
 import 'fixed_thumbnail_viewer.dart';
-import 'fixed_thumbnail_viewer.dart';
 
 class FixedTrimViewer extends StatefulWidget {
   /// The Trimmer instance controlling the data.
@@ -330,7 +329,6 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
         endDifference >= -widget.editorProperties.sideTapSize) {
       _allowDrag = true;
     } else {
-      debugPrint("Dragging is outside of frame, ignoring gesture...");
       _allowDrag = false;
       return;
     }
@@ -407,6 +405,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
 
   /// Drag gesture ended, update UI accordingly.
   void _onDragEnd(DragEndDetails details) {
+    _onEndDragged();
     setState(() {
       _startCircleSize = widget.editorProperties.circleSize;
       _endCircleSize = widget.editorProperties.circleSize;
