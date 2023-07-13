@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:video_compress/video_compress.dart';
 
 class ScrollableThumbnailViewer extends StatelessWidget {
   final File videoFile;
@@ -38,10 +38,9 @@ class ScrollableThumbnailViewer extends StatelessWidget {
     for (int i = 1; i <= numberOfThumbnails; i++) {
       Uint8List? bytes;
       try {
-        bytes = await VideoThumbnail.thumbnailData(
-          video: videoPath,
-          imageFormat: ImageFormat.JPEG,
-          timeMs: (eachPart * i).toInt(),
+        bytes = await VideoCompress.getByteThumbnail(
+          videoPath,
+          position: (eachPart * i).toInt(),
           quality: quality,
         );
       } catch (e) {

@@ -137,12 +137,6 @@ class TrimEditorPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    final rect = Rect.fromPoints(startPos, endPos);
-    final roundedRect = RRect.fromRectAndRadius(
-      rect,
-      Radius.circular(borderRadius),
-    );
-
     if (showScrubber) {
       if (scrubberAnimationDx.toInt() > startPos.dx.toInt()) {
         canvas.drawLine(
@@ -153,13 +147,57 @@ class TrimEditorPainter extends CustomPainter {
       }
     }
 
-    canvas.drawRRect(roundedRect, borderPaint);
-    // Paint start holder
+    // // Paint start holder
+    canvas.drawLine(
+      Offset(startPos.dx, 0),
+      Offset(startPos.dx, endPos.dy),
+      borderPaint,
+    );
+
+    canvas.drawLine(
+      Offset(endPos.dx, 0),
+      Offset(endPos.dx, endPos.dy),
+      borderPaint,
+    );
+
+    const double circleSize = 10;
+
     canvas.drawCircle(
-        startPos + Offset(0, endPos.dy / 2), startCircleSize, circlePaint);
-    // Paint end holder
+        startPos + Offset(0, endPos.dy / 2), circleSize, circlePaint);
+
     canvas.drawCircle(
-        endPos + Offset(0, -endPos.dy / 2), endCircleSize, circlePaint);
+        endPos + Offset(0, -endPos.dy / 2), circleSize, circlePaint);
+    backArrowPainter ??= paintArrowIcon(Icons.arrow_forward_ios_rounded);
+    backArrowPainter?.paint(
+        canvas,
+        endPos +
+            Offset(0, -endPos.dy / 2) -
+            Offset(backArrowPainter!.width / 2, backArrowPainter!.height / 2));
+
+    frontArrowPainter ??= paintArrowIcon(Icons.arrow_back_ios_rounded);
+    frontArrowPainter?.paint(
+        canvas,
+        startPos +
+            Offset(0, endPos.dy / 2) -
+            Offset(backArrowPainter!.width / 2, backArrowPainter!.height / 2));
+  }
+
+  TextPainter? frontArrowPainter;
+  TextPainter? backArrowPainter;
+
+  TextPainter paintArrowIcon(IconData iconData) {
+    const double iconSize = 12;
+    TextPainter textPainter = TextPainter(textDirection: TextDirection.ltr);
+    textPainter.text = TextSpan(
+      text: String.fromCharCode(iconData.codePoint),
+      style: TextStyle(
+        fontSize: iconSize,
+        fontFamily: iconData.fontFamily,
+        color: Colors.black,
+      ),
+    );
+    textPainter.layout();
+    return textPainter;
   }
 
   @override
