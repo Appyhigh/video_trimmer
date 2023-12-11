@@ -53,10 +53,12 @@ class _FixedThumbnailViewerState extends State<FixedThumbnailViewer> {
       if (!mounted) break;
       String? thumbnailPath;
       try {
-        final position = eachPart * 1000 * i;
+        final position =
+            Platform.isAndroid ? eachPart * 1000 * i : eachPart * i * 0.001;
         final ext = path.extension(videoPath);
-        final videoDir = path.dirname(videoPath);
-        final tempFilePath = path.join(videoDir, '${const Uuid().v4()}$ext');
+        final videoDir = await getTemporaryDirectory();
+        final tempFilePath =
+            path.join(videoDir.path, '${const Uuid().v4()}$ext');
         await File(tempFilePath).create(recursive: true);
         await File(videoPath).copy(tempFilePath);
         final thumbnailFile = await VideoCompress.getFileThumbnail(
