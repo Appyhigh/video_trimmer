@@ -10,12 +10,13 @@ dependencies:
     sdk: flutter
 
   video_player: ^2.5.1
-  ffmpeg_kit_flutter_min_gpl: ^5.1.0-LTS
+  ffmpeg_kit_flutter_min_gpl: ^5.1.0
   video_compress: ^3.1.2
   path_provider: ^2.0.12
   intl: ^0.18.0
   path: ^1.8.3
   transparent_image: ^2.0.0
+  uuid: ^3.0.4
 
 dev_dependencies:
   flutter_lints: ^2.0.1

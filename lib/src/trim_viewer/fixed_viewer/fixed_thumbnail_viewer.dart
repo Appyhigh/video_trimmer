@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:transparent_image/transparent_image.dart';
+import 'package:uuid/uuid.dart';
 import 'package:video_compress/video_compress.dart';
 
 class FixedThumbnailViewer extends StatefulWidget {
@@ -28,12 +31,10 @@ class FixedThumbnailViewer extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<FixedThumbnailViewer> createState() =>
-      _FixedThumbnailViewerState();
+  State<FixedThumbnailViewer> createState() => _FixedThumbnailViewerState();
 }
 
-class _FixedThumbnailViewerState
-    extends State<FixedThumbnailViewer> {
+class _FixedThumbnailViewerState extends State<FixedThumbnailViewer> {
   StreamController<List<String>> controller = StreamController<List<String>>();
 
   @override
@@ -52,8 +53,20 @@ class _FixedThumbnailViewerState
       if (!mounted) break;
       String? thumbnailPath;
       try {
-        final thumbnailFile = await VideoCompress.getFileThumbnail(videoPath,
-            quality: 20, position: (eachPart * i).toInt());
+        final position =
+            Platform.isAndroid ? eachPart * 1000 * i : eachPart * i * 0.001;
+        final ext = path.extension(videoPath);
+        final videoDir = await getTemporaryDirectory();
+        final tempFilePath =
+            path.join(videoDir.path, '${const Uuid().v4()}$ext');
+        await File(tempFilePath).create(recursive: true);
+        await File(videoPath).copy(tempFilePath);
+        final thumbnailFile = await VideoCompress.getFileThumbnail(
+          tempFilePath,
+          quality: 20,
+          position: position.toInt(),
+        );
+        await File(tempFilePath).delete(recursive: true);
         thumbnailPath = thumbnailFile.path;
       } catch (e) {
         debugPrint('ERROR: Couldn\'t generate thumbnails: $e');
